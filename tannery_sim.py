@@ -76,7 +76,6 @@ if st.button("🚀 EXECUTE PRODUCTION RUN"):
     handle = ""
 
     # --- ANALYTICAL LAB LOGIC ---
-    # PH Logic
     if neutral_ph < 4.2:
         score -= 30
         microscope = "Fibers congested at the surface; 'Case-hardened' shell visible. Center is white/starved."
@@ -91,16 +90,27 @@ if st.button("🚀 EXECUTE PRODUCTION RUN"):
 
     # Mission-Specific Penalties
     if mission == "Rugged Combat Boot":
-        if shave < 1.8: score -= 30; warnings.append("❌ FAIL: Tensile strength below safety limits.")
-        if fat_type != "Waterproof Polymer": score -= 40; warnings.append("❌ FAIL: Leaked in Bally Flex test.")
+        if shave < 1.8:
+            score -= 30
+            warnings.append("❌ FAIL: Tensile strength below safety limits.")
+        if fat_type != "Waterproof Polymer":
+            score -= 40
+            warnings.append("❌ FAIL: Leaked in Bally Flex test.")
         
     elif mission == "Luxury Upholstery Nappa":
-        if fat_type == "Fish Oil (Standard)": score -= 50; warnings.append("❌ FAIL: High VOCs - windshield fogging detected.")
-        if "Mimosa (Veg)" in retans: score -= 20; warnings.append("⚠️ Hand is too firm for upholstery.")
+        if fat_type == "Fish Oil (Standard)":
+            score -= 50
+            warnings.append("❌ FAIL: High VOCs - windshield fogging detected.")
+        if "Mimosa (Veg)" in retans:
+            score -= 20
+            warnings.append("⚠️ Hand is too firm for upholstery.")
         
     elif mission == "Classic Oxford Shoe":
-        if "Phenolic Syntan" not in retans: score -= 20; warnings.append("⚠️ Grain break is too coarse for formal footwear.")
-        if shave > 1.8: warnings.append("⚠️ Too thick; lasting machines will struggle.")
+        if "Phenolic Syntan" not in retans:
+            score -= 20
+            warnings.append("⚠️ Grain break is too coarse for formal footwear.")
+        if shave > 1.8:
+            warnings.append("⚠️ Too thick; lasting machines will struggle.")
 
     if not adhesion:
         score -= 40
