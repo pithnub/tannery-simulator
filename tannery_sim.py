@@ -1,7 +1,7 @@
 import streamlit as st
 
 # --- INITIAL SETUP ---
-st.set_page_config(page_title="Tannery Pro Sim v3.6", layout="wide")
+st.set_page_config(page_title="Tannery Master: Luxury & Performance", layout="wide")
 
 # Custom Styling for the Lab Report
 st.markdown("""
@@ -13,6 +13,13 @@ st.markdown("""
         border-left: 8px solid #34495e;
         color: #2c3e50;
         font-family: 'Courier New', Courier, monospace;
+    }
+    .stButton>button {
+        width: 100%;
+        background-color: #34495e;
+        color: white;
+        height: 3em;
+        font-weight: bold;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -29,7 +36,7 @@ mission = st.sidebar.selectbox(
 
 briefs = {
     "Rugged Combat Boot": {"thick": "2.0-2.2mm", "ph": "4.5-4.8", "spec": "Waterproof / High Tensile"},
-    "Luxury Upholstery Nappa": {"thick": "0.9-1.1mm", "ph": "5.0-5.5", "spec": "High Drape / Low Fogging"},
+    "Luxury Upholstery Nappa": {"thick": "0.9-1.1mm", "ph": "5.0-5.8", "spec": "Drape / Lightfastness"},
     "Classic Oxford Shoe": {"thick": "1.4-1.6mm", "ph": "4.8-5.0", "spec": "Tight Break / High Shine"}
 }
 
@@ -45,16 +52,16 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.header("1. Mechanical & Neutralization")
-    shave = st.slider("Shave Thickness (mm)", 0.5, 3.0, 1.5)
-    neutral_ph = st.slider("Neutralization pH", 3.0, 7.0, 4.8)
+    shave = st.slider("Shave Thickness (mm)", 0.5, 3.0, 1.1)
+    neutral_ph = st.slider("Neutralization pH", 3.0, 7.0, 5.2)
     
     st.header("2. Retanning Blend")
     retans = st.multiselect("Select Agents:", ["Mimosa (Veg)", "Phenolic Syntan", "Acrylic Resin", "Chrome III"])
     
 with col2:
     st.header("3. Lubrication & Fixation")
-    fat_type = st.selectbox("Fatliquor Chemistry:", ["Fish Oil (Standard)", "Synthetic (Low Fog)", "Waterproof Polymer"])
-    fat_level = st.slider("Fatliquor Dosage (%)", 2, 20, 8)
+    fat_type = st.selectbox("Fatliquor Chemistry:", ["Fish Oil (Standard)", "Synthetic (Lightfast)", "Waterproof Polymer"])
+    fat_level = st.slider("Fatliquor Dosage (%)", 2, 20, 12)
     
     st.header("4. Finishing & Protection")
     adhesion = st.checkbox("Apply Adhesion/Seal Coat?", value=True)
@@ -72,7 +79,7 @@ if st.button("🚀 EXECUTE PRODUCTION RUN"):
     # Acidic Side (Universal Problem)
     if neutral_ph < 4.2:
         score -= 30
-        microscope = "Fibers congested at surface; 'Case-hardened' shell. Center is white/starved."
+        microscope = "Fibers congested at surface; 'Case-hardened' shell. Center is starved."
         handle = "Boardy and 'tinny'. Grain will crack under tension."
     
     # Alkaline Side (Adaptive: Problematic for THICK, okay for THIN)
@@ -82,11 +89,10 @@ if st.button("🚀 EXECUTE PRODUCTION RUN"):
             microscope = "Excessive fiber bundle separation in heavy substance."
             handle = "Loose and spongy. Significant piping detected."
         else:
-            # For thin Nappa, high pH is often okay/desired
             microscope = "Maximum fiber opening achieved for thin substance."
-            handle = "Very soft, high-drape handle. Grain remains acceptable."
+            handle = "High-drape handle achieved. Ideal for luxury upholstery."
 
-    # Mission-Specific Penalties
+    # --- MISSION SPECIFIC LOGIC ---
     if mission == "Rugged Combat Boot":
         if shave < 1.8:
             score -= 30
@@ -96,17 +102,26 @@ if st.button("🚀 EXECUTE PRODUCTION RUN"):
             warnings.append("❌ FAIL: Failed Maeser Water Penetration test.")
         
     elif mission == "Luxury Upholstery Nappa":
+        # Updated for Furniture (Yellowing & Spew vs Fogging)
         if fat_type == "Fish Oil (Standard)":
-            score -= 50
-            warnings.append("❌ FAIL: High VOCs - windshield fogging detected.")
+            score -= 40
+            warnings.append("⚠️ WARNING: Fish oil detected. Potential for oxidation odor and 'fatty acid spew' in domestic environments.")
+        
+        if "Phenolic Syntan" in retans:
+            score -= 30
+            warnings.append("❌ FAIL: High Phenol content. Failed ISO 105-X18 Phenolic Yellowing test (Lightfastness failure).")
+            
         if "Mimosa (Veg)" in retans:
             score -= 20
-            warnings.append("⚠️ Hand is too firm for luxury upholstery.")
+            warnings.append("⚠️ Hand is too firm/woody for high-drape luxury upholstery.")
+            
+        if shave > 1.3:
+            warnings.append("⚠️ Substance is slightly heavy for high-end furniture drape.")
         
     elif mission == "Classic Oxford Shoe":
         if "Phenolic Syntan" not in retans:
             score -= 20
-            warnings.append("⚠️ Grain break is too coarse for formal shoes.")
+            warnings.append("⚠️ Grain break is too coarse. Needs phenolic filling for shoe upper.")
         if shave > 1.8:
             warnings.append("⚠️ Too thick; lasting machine tension will exceed limits.")
 
@@ -114,7 +129,6 @@ if st.button("🚀 EXECUTE PRODUCTION RUN"):
         score -= 40
         warnings.append("❌ CRITICAL: Finish failed wet-rub fastness (Delamination).")
 
-    # Final Score Adjustment
     score = max(0, score) # No negative scores
 
     # --- RESULTS DISPLAY ---
@@ -126,7 +140,7 @@ if st.button("🚀 EXECUTE PRODUCTION RUN"):
             <h3>🔬 ANALYTICAL LAB REPORT</h3>
             <p><strong>Microscope View:</strong> {microscope}</p>
             <p><strong>Physical Handle:</strong> {handle}</p>
-            <p><strong>Chemical Fixation:</strong> {'Stable' if 4.0 < neutral_ph < 5.5 else 'Unstable/Surface Heavy'}</p>
+            <p><strong>Chemical Fixation:</strong> {'Stable' if 4.0 < neutral_ph < 5.8 else 'Unstable/Surface Heavy'}</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -138,10 +152,10 @@ if st.button("🚀 EXECUTE PRODUCTION RUN"):
             st.balloons()
         elif score >= 50:
             st.warning(f"Score: {score}/100")
-            st.write("⚖️ 'B-Grade. Suitable for lower-tier ranges.'")
+            st.write("⚖️ 'B-Grade. Suitable for lower-tier furniture ranges.'")
         else:
             st.error(f"Score: {score}/100")
-            st.write("🗑️ 'Scrap. Chemical distribution is catastrophic.'")
+            st.write("🗑️ 'Scrap. Chemical distribution or stability failed.')")
 
     if warnings:
         st.markdown("### ⚠️ Non-Conformance Issues")
