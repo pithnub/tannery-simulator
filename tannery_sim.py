@@ -1,7 +1,7 @@
 import streamlit as st
 
 # --- INITIAL SETUP ---
-st.set_page_config(page_title="Tannery Pro Sim v3.5", layout="wide")
+st.set_page_config(page_title="Tannery Pro Sim v3.6", layout="wide")
 
 # Custom Styling for the Lab Report
 st.markdown("""
@@ -13,12 +13,6 @@ st.markdown("""
         border-left: 8px solid #34495e;
         color: #2c3e50;
         font-family: 'Courier New', Courier, monospace;
-    }
-    .metric-card {
-        background-color: #ffffff;
-        padding: 15px;
-        border-radius: 8px;
-        box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
     }
     </style>
     """, unsafe_allow_html=True)
@@ -33,7 +27,6 @@ mission = st.sidebar.selectbox(
     ["Rugged Combat Boot", "Luxury Upholstery Nappa", "Classic Oxford Shoe"]
 )
 
-# Dynamic Brief Info
 briefs = {
     "Rugged Combat Boot": {"thick": "2.0-2.2mm", "ph": "4.5-4.8", "spec": "Waterproof / High Tensile"},
     "Luxury Upholstery Nappa": {"thick": "0.9-1.1mm", "ph": "5.0-5.5", "spec": "High Drape / Low Fogging"},
@@ -52,8 +45,8 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.header("1. Mechanical & Neutralization")
-    shave = st.slider("Shave Thickness (mm)", 0.5, 3.0, 1.5, help="Sets the potential strength envelope.")
-    neutral_ph = st.slider("Neutralization pH", 3.0, 7.0, 4.8, help="Determines depth of chemical penetration.")
+    shave = st.slider("Shave Thickness (mm)", 0.5, 3.0, 1.5)
+    neutral_ph = st.slider("Neutralization pH", 3.0, 7.0, 4.8)
     
     st.header("2. Retanning Blend")
     retans = st.multiselect("Select Agents:", ["Mimosa (Veg)", "Phenolic Syntan", "Acrylic Resin", "Chrome III"])
@@ -72,30 +65,35 @@ st.write("---")
 if st.button("🚀 EXECUTE PRODUCTION RUN"):
     score = 100
     warnings = []
-    microscope = ""
-    handle = ""
+    microscope = "Uniform chemical distribution. Fiber bundles well-split."
+    handle = "Balanced stand with a tight, fine break."
 
-    # --- ANALYTICAL LAB LOGIC ---
+    # --- UPDATED ADAPTIVE LOGIC ---
+    # Acidic Side (Universal Problem)
     if neutral_ph < 4.2:
         score -= 30
-        microscope = "Fibers congested at the surface; 'Case-hardened' shell visible. Center is white/starved."
+        microscope = "Fibers congested at surface; 'Case-hardened' shell. Center is white/starved."
         handle = "Boardy and 'tinny'. Grain will crack under tension."
+    
+    # Alkaline Side (Adaptive: Problematic for THICK, okay for THIN)
     elif neutral_ph > 5.8:
-        score -= 25
-        microscope = "Excessive fiber bundles separation. Connection between grain and corium is frayed."
-        handle = "Loose and spongy. Poor 'snap' and terrible piping."
-    else:
-        microscope = "Uniform chemical distribution. Fiber bundles are well-split and lubricated to the core."
-        handle = "Balanced stand with a tight, fine break."
+        if shave >= 1.8:
+            score -= 25
+            microscope = "Excessive fiber bundle separation in heavy substance."
+            handle = "Loose and spongy. Significant piping detected."
+        else:
+            # For thin Nappa, high pH is often okay/desired
+            microscope = "Maximum fiber opening achieved for thin substance."
+            handle = "Very soft, high-drape handle. Grain remains acceptable."
 
     # Mission-Specific Penalties
     if mission == "Rugged Combat Boot":
         if shave < 1.8:
             score -= 30
-            warnings.append("❌ FAIL: Tensile strength below safety limits.")
+            warnings.append("❌ FAIL: Tensile strength below 200N (Safety Limit).")
         if fat_type != "Waterproof Polymer":
             score -= 40
-            warnings.append("❌ FAIL: Leaked in Bally Flex test.")
+            warnings.append("❌ FAIL: Failed Maeser Water Penetration test.")
         
     elif mission == "Luxury Upholstery Nappa":
         if fat_type == "Fish Oil (Standard)":
@@ -103,18 +101,21 @@ if st.button("🚀 EXECUTE PRODUCTION RUN"):
             warnings.append("❌ FAIL: High VOCs - windshield fogging detected.")
         if "Mimosa (Veg)" in retans:
             score -= 20
-            warnings.append("⚠️ Hand is too firm for upholstery.")
+            warnings.append("⚠️ Hand is too firm for luxury upholstery.")
         
     elif mission == "Classic Oxford Shoe":
         if "Phenolic Syntan" not in retans:
             score -= 20
-            warnings.append("⚠️ Grain break is too coarse for formal footwear.")
+            warnings.append("⚠️ Grain break is too coarse for formal shoes.")
         if shave > 1.8:
-            warnings.append("⚠️ Too thick; lasting machines will struggle.")
+            warnings.append("⚠️ Too thick; lasting machine tension will exceed limits.")
 
     if not adhesion:
         score -= 40
-        warnings.append("❌ CRITICAL: Finish failed rub-fastness test (Delamination).")
+        warnings.append("❌ CRITICAL: Finish failed wet-rub fastness (Delamination).")
+
+    # Final Score Adjustment
+    score = max(0, score) # No negative scores
 
     # --- RESULTS DISPLAY ---
     c_lab, c_feedback = st.columns([2, 1])
@@ -133,14 +134,14 @@ if st.button("🚀 EXECUTE PRODUCTION RUN"):
         st.subheader("Factory Feedback")
         if score >= 80:
             st.success(f"Score: {score}/100")
-            st.write("🌟 'The best batch we've seen this month. Perfect for the cutting room!'")
+            st.write("🌟 'Perfect Batch. Send to the cutting room!'")
             st.balloons()
         elif score >= 50:
             st.warning(f"Score: {score}/100")
-            st.write("⚖️ 'Acceptable as B-Grade, but we'll have to discount the price.'")
+            st.write("⚖️ 'B-Grade. Suitable for lower-tier ranges.'")
         else:
             st.error(f"Score: {score}/100")
-            st.write("🗑️ 'Scrap. This doesn't even feel like leather. Send it to the landfill.'")
+            st.write("🗑️ 'Scrap. Chemical distribution is catastrophic.'")
 
     if warnings:
         st.markdown("### ⚠️ Non-Conformance Issues")
