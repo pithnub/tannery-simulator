@@ -3,7 +3,7 @@ import streamlit as st
 # --- INITIAL SETUP ---
 st.set_page_config(page_title="Tannery Master: Luxury & Performance", layout="wide")
 
-# Custom Styling for the Lab Report
+# Custom Styling
 st.markdown("""
     <style>
     .report-box {
@@ -54,35 +54,27 @@ with col1:
     st.header("1. Mechanical & Neutralization")
     shave = st.slider("Shave Thickness (mm)", 0.5, 3.0, 1.1)
     neutral_ph = st.slider("Neutralization pH", 3.0, 7.0, 5.2)
-    
-    st.header("2. Retanning Blend")
     retans = st.multiselect("Select Agents:", ["Mimosa (Veg)", "Phenolic Syntan", "Acrylic Resin", "Chrome III"])
     
 with col2:
-    st.header("3. Lubrication & Fixation")
+    st.header("2. Lubrication & Finish")
     fat_type = st.selectbox("Fatliquor Chemistry:", ["Fish Oil (Standard)", "Synthetic (Lightfast)", "Waterproof Polymer"])
     fat_level = st.slider("Fatliquor Dosage (%)", 2, 20, 12)
-    
-    st.header("4. Finishing & Protection")
     adhesion = st.checkbox("Apply Adhesion/Seal Coat?", value=True)
     finish_sys = st.selectbox("Finish System:", ["Aniline", "Semi-Aniline", "Pigmented"])
 
 # --- THE SIMULATION ENGINE ---
-st.write("---")
 if st.button("🚀 EXECUTE PRODUCTION RUN"):
     score = 100
     warnings = []
     microscope = "Uniform chemical distribution. Fiber bundles well-split."
     handle = "Balanced stand with a tight, fine break."
 
-    # --- UPDATED ADAPTIVE LOGIC ---
-    # Acidic Side (Universal Problem)
+    # Adaptive pH Logic
     if neutral_ph < 4.2:
         score -= 30
-        microscope = "Fibers congested at surface; 'Case-hardened' shell. Center is starved."
-        handle = "Boardy and 'tinny'. Grain will crack under tension."
-    
-    # Alkaline Side (Adaptive: Problematic for THICK, okay for THIN)
+        microscope = "Fibers congested; 'Case-hardened' shell. Center is starved."
+        handle = "Boardy handle. Grain will crack under tension."
     elif neutral_ph > 5.8:
         if shave >= 1.8:
             score -= 25
@@ -102,38 +94,37 @@ if st.button("🚀 EXECUTE PRODUCTION RUN"):
             warnings.append("❌ FAIL: Failed Maeser Water Penetration test.")
         
     elif mission == "Luxury Upholstery Nappa":
-        # Updated for Furniture (Yellowing & Spew vs Fogging)
+        if shave < 0.9:
+            score -= 50
+            warnings.append("❌ CRITICAL: Substance below 0.9mm. Risk of 'raspy grain' and catastrophic tear strength failure.")
+        elif shave > 1.3:
+            warnings.append("⚠️ Substance is slightly heavy for high-end furniture drape.")
+            
         if fat_type == "Fish Oil (Standard)":
             score -= 40
-            warnings.append("⚠️ WARNING: Fish oil detected. Potential for oxidation odor and 'fatty acid spew' in domestic environments.")
+            warnings.append("⚠️ WARNING: Fish oil risk. Potential for oxidation odor and 'fatty acid spew'.")
         
         if "Phenolic Syntan" in retans:
             score -= 30
-            warnings.append("❌ FAIL: High Phenol content. Failed ISO 105-X18 Phenolic Yellowing test (Lightfastness failure).")
+            warnings.append("❌ FAIL: Phenolic Yellowing detected. Failed Lightfastness test.")
             
         if "Mimosa (Veg)" in retans:
             score -= 20
-            warnings.append("⚠️ Hand is too firm/woody for high-drape luxury upholstery.")
-            
-        if shave > 1.3:
-            warnings.append("⚠️ Substance is slightly heavy for high-end furniture drape.")
+            warnings.append("⚠️ Hand is too firm for luxury upholstery drape.")
         
     elif mission == "Classic Oxford Shoe":
         if "Phenolic Syntan" not in retans:
             score -= 20
-            warnings.append("⚠️ Grain break is too coarse. Needs phenolic filling for shoe upper.")
-        if shave > 1.8:
-            warnings.append("⚠️ Too thick; lasting machine tension will exceed limits.")
+            warnings.append("⚠️ Grain break is coarse. Needs phenolic filling for shoe upper.")
 
     if not adhesion:
         score -= 40
         warnings.append("❌ CRITICAL: Finish failed wet-rub fastness (Delamination).")
 
-    score = max(0, score) # No negative scores
+    score = max(0, score)
 
     # --- RESULTS DISPLAY ---
     c_lab, c_feedback = st.columns([2, 1])
-    
     with c_lab:
         st.markdown(f"""
         <div class="report-box">
@@ -148,14 +139,11 @@ if st.button("🚀 EXECUTE PRODUCTION RUN"):
         st.subheader("Factory Feedback")
         if score >= 80:
             st.success(f"Score: {score}/100")
-            st.write("🌟 'Perfect Batch. Send to the cutting room!'")
             st.balloons()
         elif score >= 50:
             st.warning(f"Score: {score}/100")
-            st.write("⚖️ 'B-Grade. Suitable for lower-tier furniture ranges.'")
         else:
             st.error(f"Score: {score}/100")
-            st.write("🗑️ 'Scrap. Chemical distribution or stability failed.')")
 
     if warnings:
         st.markdown("### ⚠️ Non-Conformance Issues")
